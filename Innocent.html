@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chele's Legendary Routine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,400;1,700;1,900&display=swap');
+
+        body {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            background: #020617;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 20px 10px;
+            color: #1e293b;
+            overflow-x: hidden;
+        }
+
+        .main-container {
+            background: #ffffff;
+            width: 100%;
+            max-width: 420px; 
+            border-radius: 30px;
+            box-shadow: 0 0 50px rgba(59, 130, 246, 0.2);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .clock-section {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: #fff;
+            padding: 25px 15px;
+            text-align: center;
+            border-bottom: 4px solid #3b82f6;
+        }
+
+        #digital-clock {
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+            margin-bottom: 5px;
+        }
+
+        .current-date {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0.8;
+            font-weight: 700;
+        }
+
+        .scroll-area {
+            max-height: 60vh;
+            overflow-y: auto;
+            padding: 15px;
+        }
+
+        .task-card {
+            background: #f8fafc;
+            border-radius: 18px;
+            padding: 14px;
+            margin-bottom: 12px;
+            border: 1.5px solid #e2e8f0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .task-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .task-topic {
+            color: #0f172a;
+            font-size: 14px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .time-text {
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            height: 24px;
+            border-radius: 8px;
+            border: 1.5px solid #e2e8f0;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            background: white;
+            color: #64748b;
+            font-size: 9px;
+            font-weight: 900;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .task-card.state-finished {
+            background: #f0fdf4;
+            border-color: #22c55e;
+            transform: scale(0.98);
+            box-shadow: 0 0 15px rgba(34, 197, 94, 0.2);
+        }
+        .task-card.state-finished .btn-unfinished { display: none; }
+        .task-card.state-finished .btn-finished {
+            background: #22c55e;
+            color: white;
+            border-color: #16a34a;
+            flex: 1;
+        }
+
+        .task-card.state-unfinished {
+            background: #fff1f2;
+            border-color: #f43f5e;
+            box-shadow: 0 0 15px rgba(244, 63, 94, 0.2);
+        }
+        .task-card.state-unfinished .btn-finished { display: none; }
+        .task-card.state-unfinished .btn-unfinished {
+            background: #f43f5e;
+            color: white;
+            border-color: #e11d48;
+            flex: 1;
+        }
+
+        #feedback-toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-weight: 900;
+            color: white;
+            z-index: 1000;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-size: 14px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            text-align: center;
+            min-width: 220px;
+        }
+
+        #feedback-toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .progress-section {
+            padding: 20px;
+            background: #f8fafc;
+            border-top: 2px solid #e2e8f0;
+        }
+
+        .bar-outer {
+            height: 10px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+            border: 1px solid #cbd5e1;
+        }
+
+        .bar-inner {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #22c55e);
+            width: 0%;
+            transition: width 0.8s ease;
+        }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <div class="clock-section">
+        <div id="digital-clock" class="italic">00:00:00</div>
+        <div id="current-date" class="current-date italic">Loading Date...</div>
+    </div>
+    
+    <div class="scroll-area" id="routine-container"></div>
+
+    <div class="progress-section">
+        <div class="flex justify-between items-center italic font-bold text-[11px] uppercase tracking-widest text-slate-500">
+            <span>Chele's Progress</span>
+            <span id="percent-text">0%</span>
+        </div>
+        <div class="bar-outer">
+            <div id="bar-fill" class="bar-inner"></div>
+        </div>
+    </div>
+</div>
+
+<div id="feedback-toast" class="italic"></div>
+
+<script>
+    // Clock Logic
+    function updateClock() {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+        
+        document.getElementById('digital-clock').innerText = timeStr;
+        document.getElementById('current-date').innerText = dateStr;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    const routineData = [
+        ["12:00 AM – 05:00 AM", "Sleep", "😴"],
+        ["05:00 AM", "Wake Up", "⏰"],
+        ["05:00 – 05:10 AM", "Wudu", "💧"],
+        ["05:10 – 05:25 AM", "Fajr Namaz", "🕌"],
+        ["05:25 – 05:45 AM", "Shower", "🚿"],
+        ["05:45 – 06:05 AM", "Breakfast", "🍳"],
+        ["06:05 – 08:00 AM", "Study Session 1", "📚"],
+        ["08:00 – 09:00 AM", "Tuition", "👨‍🏫"],
+        ["12:30 – 01:00 PM", "Dhuhr Namaz", "☀️"],
+        ["01:00 – 01:20 PM", "Lunch", "🍱"],
+        ["01:20 – 03:30 PM", "Study Session 2", "📖"],
+        ["04:00 – 04:15 PM", "Asr Namaz", "🕋"],
+        ["04:15 – 05:45 PM", "Study Session 3", "✍️"],
+        ["Sunset", "Maghrib Namaz", "🌙"],
+        ["06:30 – 06:50 PM", "Dinner", "🍽️"],
+        ["06:50 – 06:55 PM", "Short Break", "🚬"],
+        ["07:00 – 07:10 PM", "Phone / Relax", "📱"],
+        ["07:45 – 11:45 PM", "Late Night Study", "💡"]
+    ];
+
+    const congrats = ["Good Job! 🌟", "Shabash Chele! 🔥", "Excellent Work! 🏆", "You are a Legend! ⭐", "Keep it up! 🚀"];
+    const motivation = ["Promise Reminder! 🤝", "Focus koro Chele! 💪", "Don't give up! 🛡️", "Finish it now! ⏳", "Consistency is key! 🔑"];
+
+    const container = document.getElementById('routine-container');
+    const toast = document.getElementById('feedback-toast');
+    let lastMilestone = 0;
+
+    function fireConfetti(level) {
+        if (level === 1) { confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); }
+        else if (level === 2) {
+            const end = Date.now() + 2000;
+            const interval = setInterval(() => {
+                if (Date.now() > end) return clearInterval(interval);
+                confetti({ particleCount: 50, angle: 60, spread: 55, origin: { x: 0 } });
+                confetti({ particleCount: 50, angle: 120, spread: 55, origin: { x: 1 } });
+            }, 250);
+        }
+        else if (level === 3) {
+            confetti({ particleCount: 500, spread: 160, origin: { y: 0.5 }, colors: ['#ff0000', '#22c55e', '#3b82f6', '#ffff00'] });
+        }
+    }
+
+    function showFeedback(type, currentPercent) {
+        let msg = type === 'win' 
+            ? congrats[Math.floor(Math.random() * congrats.length)]
+            : motivation[Math.floor(Math.random() * motivation.length)];
+        
+        if (type === 'win') {
+            if (currentPercent >= 100 && lastMilestone < 100) msg = "UNSTOPPABLE! 👑 MISSION COMPLETE!";
+            else if (currentPercent >= 90 && lastMilestone < 90) msg = "CHAMPION MODE ACTIVATED! 🏆";
+        }
+
+        toast.innerText = msg;
+        toast.style.background = type === 'win' ? '#22c55e' : '#f43f5e';
+        toast.classList.add('show');
+        
+        if(type === 'win') {
+            confetti({ particleCount: 40, spread: 50, origin: { y: 0.8 } });
+            if (currentPercent >= 100 && lastMilestone < 100) { fireConfetti(3); lastMilestone = 100; }
+            else if (currentPercent >= 90 && lastMilestone < 90) { fireConfetti(3); lastMilestone = 90; }
+            else if (currentPercent >= 80 && lastMilestone < 80) { fireConfetti(2); lastMilestone = 80; }
+            else if (currentPercent >= 70 && lastMilestone < 70) { fireConfetti(1); lastMilestone = 70; }
+        }
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    function updateProgress() {
+        const total = routineData.length;
+        const finished = document.querySelectorAll('.state-finished').length;
+        const p = Math.round((finished / total) * 100);
+        document.getElementById('bar-fill').style.width = p + '%';
+        document.getElementById('percent-text').innerText = p + '%';
+        return p;
+    }
+
+    routineData.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'task-card';
+        card.innerHTML = `
+            <div class="task-row">
+                <div class="task-topic italic"><span>${item[2]}</span> ${item[1]}</div>
+                <div class="time-text italic">${item[0]}</div>
+            </div>
+            <div class="btn-group">
+                <button class="toggle-btn btn-unfinished italic">Unfinished ⏳</button>
+                <button class="toggle-btn btn-finished italic">Finished ✅</button>
+            </div>
+        `;
+
+        const btnFin = card.querySelector('.btn-finished');
+        const btnUnf = card.querySelector('.btn-unfinished');
+
+        btnFin.onclick = () => {
+            if(!card.classList.contains('state-finished')) {
+                card.classList.remove('state-unfinished');
+                card.classList.add('state-finished');
+                showFeedback('win', updateProgress());
+            } else { card.classList.remove('state-finished'); updateProgress(); }
+        };
+
+        btnUnf.onclick = () => {
+            if(!card.classList.contains('state-unfinished')) {
+                card.classList.remove('state-finished');
+                card.classList.add('state-unfinished');
+                showFeedback('lose', updateProgress());
+            } else { card.classList.remove('state-unfinished'); updateProgress(); }
+        };
+
+        container.appendChild(card);
+    });
+</script>
+
+</body>
+</html>
