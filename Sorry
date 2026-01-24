@@ -1,0 +1,241 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infinity Sorry - Forgive Me</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Sacramento&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #00050a; /* Deep blueish black for sorry theme */
+            color: #fff;
+            font-family: 'Orbitron', sans-serif;
+            overflow: hidden;
+            user-select: none;
+            touch-action: none;
+        }
+
+        /* UI Layer */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+
+        /* Compact Counter Box */
+        .header-container {
+            background: rgba(0, 150, 255, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 8px 18px;
+            border-radius: 30px;
+            border: 1px solid rgba(0, 150, 255, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+            box-shadow: 0 0 15px rgba(0, 150, 255, 0.3);
+        }
+
+        .header-text {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 1.2rem;
+            color: #00ccff;
+            text-shadow: 0 0 5px #00ccff;
+        }
+
+        #count-num {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            color: #ffffff;
+            text-shadow: 0 0 10px #00ccff;
+            min-width: 50px;
+        }
+
+        .footer-text {
+            font-family: 'Sacramento', cursive;
+            font-size: 2.5rem;
+            color: #fff;
+            text-shadow: 0 0 15px #00ccff;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+        }
+
+        #text-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .vortex-text {
+            position: absolute;
+            font-weight: 900;
+            white-space: nowrap;
+            text-transform: uppercase;
+            pointer-events: none;
+            will-change: transform, opacity;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: rgba(0,0,0,0.6);
+            border: 0.5px solid rgba(0, 255, 255, 0.2);
+        }
+
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+
+    <div id="ui-layer">
+        <div class="header-container">
+            <span class="header-text">Infinity Sorry Sent:</span>
+            <span id="count-num">0</span>
+        </div>
+        <div class="footer-text">Please Forgive Me...</div>
+    </div>
+
+    <div id="text-overlay"></div>
+
+    <script>
+        let scene, camera, renderer, starGeo, stars, sadFace;
+        const countDisplay = document.getElementById('count-num');
+        const textOverlay = document.getElementById('text-overlay');
+        let displayedCount = 0;
+
+        function init() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
+            camera.position.z = 100;
+            camera.position.y = -50;
+            camera.rotation.x = 0.5;
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            // Sad Face Geometry (Substitute for 3D Heart)
+            const geometry = new THREE.SphereGeometry(20, 32, 32);
+            const material = new THREE.MeshPhongMaterial({ color: 0x0099ff, shininess: 100, wireframe: true });
+            sadFace = new THREE.Mesh(geometry, material);
+            sadFace.position.set(0, 15, -30);
+            scene.add(sadFace);
+
+            // Particles
+            starGeo = new THREE.BufferGeometry();
+            let positions = [];
+            for(let i=0; i<3000; i++) {
+                positions.push(Math.random()*600-300, Math.random()*600-300, Math.random()*600-300);
+            }
+            starGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+            let starMaterial = new THREE.PointsMaterial({ color: 0x00ccff, size: 0.7, transparent: true });
+            stars = new THREE.Points(starGeo, starMaterial);
+            scene.add(stars);
+
+            animate();
+        }
+
+        function animate() {
+            let pos = starGeo.getAttribute('position');
+            for(let i=0; i<3000; i++) {
+                let y = pos.getY(i) - 0.8;
+                if(y < -300) y = 300;
+                pos.setY(i, y);
+            }
+            pos.needsUpdate = true;
+            
+            sadFace.rotation.y += 0.01;
+            sadFace.rotation.z += 0.005;
+
+            renderer.render(scene, camera);
+            requestAnimationFrame(animate);
+        }
+
+        const messages = [
+            "I AM SO SORRY 🙇‍♂️", "PLEASE FORGIVE ME 🙏", "MY MISTAKE 😔", "I WAS WRONG ❌",
+            "GIVE ME ONE CHANCE 🤲", "SO SORRY JAAN 🥺", "I MISS OUR TALKS 🗣️", "DON'T BE ANGRY 😡🚫",
+            "I AM AN IDIOT 🤡", "SORRY FOR EVERYTHING 🌏", "FORGIVE ME PLEASE 💎", "I PROMISE 🤝",
+            "WON'T HAPPEN AGAIN 🚫", "PLEASE SMILE AGAIN 😊", "I AM HEARTBROKEN 💔", "CAN WE START OVER? 🔄",
+            "I FEEL TERRIBLE 😰", "SORRY SORRY SORRY! 🔊", "YOU ARE RIGHT ✅", "I AM THE WORST 🗑️",
+            "BIGGEST APOLOGY 🏆", "LET'S MAKE UP 🫂", "I LOVE YOU, SORRY ❤️", "REALLY SORRY 💯",
+            "DON'T IGNORE ME 🔇", "MY APOLOGIES 📝", "TRULY SORRY 🕯️", "SINCERELY SORRY 🕊️",
+            "I AM CRYING INSIDE 😢", "YOU MEAN THE WORLD 🌎", "I AM STUPID 🧠🤏", "PARDON ME 🎩",
+            "HEARTFELT SORRY 💖", "I AM LOST WITHOUT YOU 🧭", "TALK TO ME 📞", "SORRY FOR BEING RUDE 🤐",
+            "SO SORRY BABE 🍭", "PLEASE BE NORMAL 🌈", "I AM A FOOL 🃏", "HUNDRED TIMES SORRY 💯",
+            "THOUSAND TIMES SORRY 🔢", "MILLION TIMES SORRY 🌌", "INFINITY SORRY ♾️", "MY BAD ✋",
+            "OOPS, SORRY 🙊", "I AM REGRETTING 🕰️", "GIVE ME A HUG 🫂", "LOVE YOU FOREVER ❤️",
+            "STILL SORRY 🕰️", "DEEPLY SORRY 🌊", "SORRY MY LOVE 🌹", "WANT YOU BACK 🔙",
+            "FIX THIS PLEASE 🛠️", "SORRY FOR HURTING YOU 🩹", "I AM BROKEN 🧩", "DON'T LEAVE ME 🏃‍♂️🚫",
+            "I NEED YOUR FORGIVENESS ✨", "YOU ARE MY QUEEN 👑", "SORRY FOR MY BEHAVIOR 🧠", "I AM SORRY! 📢"
+        ];
+
+        const colors = ['#00ccff', '#0099ff', '#33ccff', '#ffffff', '#00ffff', '#0077ff'];
+
+        function createText() {
+            const el = document.createElement('div');
+            el.className = 'vortex-text';
+            el.innerHTML = messages[Math.floor(Math.random() * messages.length)];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            el.style.color = color;
+            el.style.textShadow = `0 0 10px ${color}`;
+            const xPos = 10 + Math.random() * 80;
+            el.style.left = xPos + '%';
+            el.style.transform = 'translateX(-50%)';
+            textOverlay.appendChild(el);
+
+            const duration = 4000 + Math.random() * 2000;
+            const startTime = performance.now();
+
+            function update(time) {
+                const p = (time - startTime) / duration;
+                if (p < 1) {
+                    el.style.top = (110 - (p * 140)) + 'vh';
+                    el.style.opacity = p < 0.1 ? p*10 : (p > 0.85 ? (1-p)*6.6 : 1);
+                    requestAnimationFrame(update);
+                } else { el.remove(); }
+            }
+            requestAnimationFrame(update);
+        }
+
+        setInterval(createText, 400);
+
+        setInterval(() => {
+            displayedCount += Math.floor(Math.random() * 10) + 5;
+            countDisplay.textContent = displayedCount.toLocaleString();
+        }, 10); 
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        init();
+    </script>
+</body>
+</html>
+
